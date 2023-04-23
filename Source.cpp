@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <regex>
@@ -8,23 +8,33 @@ using namespace std;
 string GetPronunciation(string word) {
 	string pron = "";
 
-	size_t punctPos = word.find_first_of("\"\'().,?!");
+	if (word.length() > 3 && word[word.length() - 2] == '\'') {
+		if (word.substr(word.length() - 3, 3) == "n\'t") {
+			pron = GetPronunciation(word.substr(0, word.length() - 3)) + "-nt";
+		}
+		else
+			pron = GetPronunciation(word.substr(0, word.length() - 2)) + word.back();
+		return pron;
+	}
+	else if (word.length() > 4 && word[word.length() - 3] == '\'') {
+		pron = GetPronunciation(word.substr(0, word.length() - 3)) + word.substr(word.length() - 2, 2);
+		return pron;
+	}
+
+	// remove remaining punctuation
+	size_t punctPos = word.find_first_of("\"'().,?!");
 	while (punctPos != string::npos) {
 		word.erase(punctPos, 1);
 		punctPos = word.find_first_of("\"\'().,?!");
 	}
 
-	size_t hyphenPos = word.find("-");
-	while (hyphenPos != string::npos) {
-		string newWord = word.substr(0, hyphenPos);
-		pron += GetPronunciation(newWord) + " ";
-		word.erase(0, hyphenPos + 1);
-		hyphenPos = word.find("-");
-	}
+	if (word.length() == 0)
+		return "";
 
+	// use curl to run command with word and write definition to file
 	string input = "curl https://dictionaryapi.com/api/v3/references/collegiate/json/"
-		+word
-		+"?key=e0c99829-f7f5-4ad9-9f70-97534628f352 -o definition.txt";
+		+ word
+		+ "?key=e0c99829-f7f5-4ad9-9f70-97534628f352 -o definition.txt";
 	const char* cmd = input.c_str();
 	system(cmd);
 
@@ -33,38 +43,54 @@ string GetPronunciation(string word) {
 	string line;
 	getline(def, line);
 
-	if (line.find("\"id\"") == string::npos) {
-		cout << "Word not found\n";
-		return "";
+	size_t startPos = 0;
+	size_t prsPos = line.find("\"prs\"");
+	size_t closeQPos = line.rfind("\"", prsPos - 2);
+	size_t openQPos = line.rfind("\"", closeQPos - 1) + 1;
+	string possibleWord = line.substr(openQPos, closeQPos - openQPos);
+
+	size_t starPos = possibleWord.find("*");
+	while (starPos != string::npos) {
+		possibleWord.erase(starPos, 1);
+		starPos = possibleWord.find("*");
 	}
-	
 
-	/*string foundWord = line.substr(16, line.find(",") - 17);
-	foundWord = foundWord.substr(0, foundWord.find(":"));
-
-	if (foundWord != word) {
-		input = "curl https://dictionaryapi.com/api/v3/references/collegiate/json/"
-			+foundWord
-			+"?key=e0c99829-f7f5-4ad9-9f70-97534628f352 -o definition.txt";
-		cmd = input.c_str();
-		system(cmd);
-
-		ifstream newDef("definition.txt");
-		getline(newDef, line);
-	}*/
-
-	size_t pronPos = line.find("\"mw\"");
-	if (pronPos != string::npos) {
+	if (possibleWord == word) {
+		size_t pronPos = line.find("\"mw\"", prsPos) + 6;
 		size_t endPos = line.find(",", pronPos);
-		pron += line.substr(pronPos + 6, endPos - pronPos - 7);
+		pron = line.substr(pronPos, endPos - pronPos - 1);
 	}
+	else {
+		while (prsPos != string::npos) {
+			closeQPos = line.rfind("\"", prsPos - 2);
+			openQPos = line.rfind("\"", closeQPos - 1) + 1;
+			possibleWord = line.substr(openQPos, closeQPos - openQPos);
 
-	/*if (foundWord != word) {
-		if (word.back() == 's')
-			pron += 's';
-		if (word.back() == 'd')
-			pron += 'd';
-	}*/
+			size_t starPos = possibleWord.find("*");
+			while (starPos != string::npos) {
+				possibleWord.erase(starPos, 1);
+				starPos = possibleWord.find("*");
+			}
+
+			if (possibleWord == word) {
+				size_t pronPos = line.find("\"mw\"", prsPos) + 6;
+				size_t endPos = line.find(",", pronPos);
+				pron = line.substr(pronPos, endPos-pronPos - 1);
+				break;
+			}
+
+			startPos = prsPos + 1;
+			prsPos = line.find("\"prs\"", startPos);
+		}
+		if (possibleWord != word) {
+			if (word.back() == 's')
+				pron = GetPronunciation(word.substr(0, word.length() - 1)) + "s";
+			else if (word.substr(word.length() - 2, 2) == "ed")
+				pron = GetPronunciation(word.substr(0, word.length() - 2)) + "d";
+			else
+				pron = word;
+		}
+	}
 
 	return pron;
 }
@@ -116,18 +142,24 @@ string DecodePronunciation(string pron) {
 		else
 			result += pron[i];
 	}
-	
+
 	return result;
 }
 
 int main() {
+
 	string word;
 	cin >> word;
+	string lowerWord = "";
+	for (char c : word) {
+		lowerWord += tolower(c);
+	}
+	word = lowerWord;
 
 	vector<string> result;
 	unordered_map<string, string> pronMap;
 
-	while (word != "-1") {
+	while (word != "1") {
 		if (word == "0") {
 			for (string word : result) {
 				if (word != result.front())
@@ -138,15 +170,35 @@ int main() {
 			result.clear();
 		}
 		else {
-			if (pronMap.find(word) == pronMap.end())
-				pronMap.emplace(word, GetPronunciation(word));
-			string pron = pronMap[word];
-		
-			if (pron != "") 
-				result.push_back(DecodePronunciation(pron));
+			vector<string> noHyphens;
+			// replace hyphens with spaces
+			size_t hyphenPos = word.find("-");
+			if (hyphenPos == string::npos)
+				noHyphens.push_back(word);
+			else
+				noHyphens.push_back(word.substr(0, hyphenPos));
+			while (hyphenPos != string::npos) {
+				word.erase(0, hyphenPos + 1);
+				hyphenPos = word.find("-");
+				noHyphens.push_back(word.substr(0, hyphenPos));
+			}
+
+			for (string word : noHyphens) {
+				if (pronMap.find(word) == pronMap.end())
+					pronMap.emplace(word, GetPronunciation(word));
+				string pron = pronMap[word];
+
+				if (pron != "")
+					result.push_back(DecodePronunciation(pron));
+			}
 		}
-		
+
 		cin >> word;
+		string lowerWord = "";
+		for (char c : word) {
+			lowerWord += tolower(c);
+		}
+		word = lowerWord;
 	}
 	return 0;
 }
