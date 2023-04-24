@@ -127,6 +127,36 @@ string DecodePronunciation(string pron, unordered_map<string,string> &ipa_map) {
 
 	return result;
 }
+
+vector<string> ones{ "","one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+vector<string> teens{ "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen","sixteen", "seventeen", "eighteen", "nineteen" };
+vector<string> tens{ "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
+
+string numToName(long num) {
+	if (num < 10) {
+		return ones[num];
+	}
+	else if (num < 20) {
+		return teens[num - 10];
+	}
+	else if (num < 100) {
+		return tens[num / 10] + ((num % 10 != 0) ? " " + numToName(num % 10) : "");
+	}
+	else if (num < 1000) {
+		return numToName(num / 100) + " hundred" + ((num % 100 != 0) ? " " + numToName(num % 100) : "");
+	}
+	else if (num < 1000000) {
+		return numToName(num / 1000) + " thousand" + ((num % 1000 != 0) ? " " + numToName(num % 1000) : "");
+	}
+	else if (num < 1000000000) {
+		return numToName(num / 1000000) + " million" + ((num % 1000000 != 0) ? " " + numToName(num % 1000000) : "");
+	}
+	else if (num < 1000000000000) {
+		return numToName(num / 1000000000) + " billion" + ((num % 1000000000 != 0) ? " " + numToName(num % 1000000000) : "");
+	}
+	return "error";
+}
+
 int main()
 {
     unordered_map<string, string> ipa_map;
@@ -151,8 +181,9 @@ int main()
     fstream inFile("oneArtist.csv", ios::in);
     string artistName, songTitle, songLyrics, lyricsLine, junk, index;
     getline(inFile, junk);
-    regex validLyric = regex("^[a-zA-Z0-9\\s'\"\n\\[\\]]*$"); // lowercase a-z, numbers, spaces, apostrpohes, quotes
+    regex validLyric = regex("^[a-zA-Z0-9\\s'\"\n\\[\\]]*$"); // lowercase a-z, nums, spaces, apostrpohes, quotes
     regex validWord = regex("^[a-zA-Z0-9']*$");
+	regex numeric = regex("^[0-9]*$");
     
     unordered_map<string, string> pronunciationMap;
     if(inFile.is_open())
@@ -188,6 +219,24 @@ int main()
                         {
                             isLastLine = true;
                         }
+						if (regex_match(word, numeric)) {
+							int num = stoi(word);
+							string numName = numToName(num);
+
+							stringstream numStream(numName);
+							string digitName;
+							while (cin >> digitName) {
+								if (pronunciationMap.find(digitName) != pronunciationMap.end())
+								{
+									ipaWord = pronunciationMap[digitName];
+								}
+								else
+								{
+									pronunciationMap.emplace(digitName, GetPronunciation(digitName));
+								}
+								cout << DecodePronunciation(pronunciationMap[digitName], pronunciationMap) << endl;
+							}
+						}
                         if(regex_search(word, validWord))
                         {
                             
@@ -201,7 +250,7 @@ int main()
                             {
                                 pronunciationMap.emplace(word, GetPronunciation(word));
                             }
-                            cout << pronunciationMap[word] << endl;
+                            cout << DecodePronunciation(pronunciationMap[word], pronunciationMap) << endl;
                             
                         }
                         if(isLastLine)
