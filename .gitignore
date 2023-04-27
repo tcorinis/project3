@@ -1,0 +1,7 @@
+.vscode/
+.3rdparty/
+.build/
+.data/
+.incaseitbreaks/
+.programData/
+.CMakeFiles/
