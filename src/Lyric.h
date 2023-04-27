@@ -9,11 +9,12 @@ public:
     std::string songTitle;
     std::string phoneticLyric;
     std::string originalLyric;
+    int positionIndex;
     float fuzzRatio;
     //float fuzzPartialRatio, fuzzTokenSortRatio, fuzzTokenSetRatio, fuzzTokenRatio;
 
-    Lyric(std::string artistName, std::string songTitle,  std::string originalLyric, std::string phoneticLyric) : artistName(artistName), \
-    songTitle(songTitle), phoneticLyric(phoneticLyric), originalLyric(originalLyric), fuzzRatio(-1.0) {};
+    Lyric(std::string artistName, std::string songTitle,  std::string originalLyric, std::string phoneticLyric, int lyricLineIndex) : artistName(artistName), \
+    songTitle(songTitle), phoneticLyric(phoneticLyric), originalLyric(originalLyric), fuzzRatio(-1.0), positionIndex(lyricLineIndex) {};
     //fuzzPartialRatio(-1.0), 
     //fuzzTokenSortRatio(-1.0), fuzzTokenSetRatio(-1.0), fuzzTokenRatio(-1.0) {};
     
