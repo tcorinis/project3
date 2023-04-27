@@ -114,8 +114,21 @@ int main()
 	// TODO: This main program will display <x> amount of the top results and maybe do some filtering
 
 	std::string userSearch;
-
 	std::string userSearchPhonetic;
+
+	std::getline(std::cin, userSearch);
+
+	userSearchPhonetic = ConvertSearchToPhonetic(userSearch, ipa_map, pronunciationMap);
+
+	CalcFuzzRatio(allLyrics, userSearchPhonetic);
+
+	for(int i = allLyrics.size() - 1; i >= allLyrics.size()-6; i--)
+	{
+		std::cout << allLyrics.at(i).songTitle << std::endl;
+		std::cout << allLyrics.at(i).originalLyric << std::endl;
+		std::cout << allLyrics.at(i).phoneticLyric << std::endl;
+		std::cout << allLyrics.at(i).fuzzRatio << std::endl;
+	}
 	
 	return 0;
 

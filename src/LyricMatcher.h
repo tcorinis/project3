@@ -8,6 +8,113 @@
 #include "Lyric.h"
 #include <rapidfuzz/fuzz.hpp>
 
+int Partition(std::vector<Lyric>& lyrics, int low, int high) {
+    Lyric pivot = lyrics.at(low);
+
+    int up = low, down = high;
+
+    while (up < down) {
+        for (int i = up; i < high; i++) {
+            if (lyrics.at(up) < pivot)
+                break;
+            up++;
+        }
+        for (int i = high; i > low; i--) {
+            if (lyrics.at(down) > pivot)
+                break;
+            down--;
+        }
+        if (up < down) {
+            Lyric temp = lyrics.at(up);
+            lyrics.at(up) = lyrics.at(down);
+            lyrics.at(down) = temp;
+        }
+    }
+    Lyric temp = lyrics.at(low);
+    lyrics.at(low) = lyrics.at(down);
+    lyrics.at(down) = temp;
+    return down;
+}
+
+void QuickSort(std::vector<Lyric> &lyrics, int low, int high) {
+    if (low < high) {
+        int pivot = Partition(lyrics, low, high);
+        QuickSort(lyrics, low, pivot - 1);
+        QuickSort(lyrics, pivot + 1, high);
+    }
+}
+
+void Merge(std::vector<Lyric> &lyrics, int left, int mid, int right)
+{
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    std::vector<Lyric> leftSubset;
+    std::vector<Lyric> rightSubset;
+    for(int i = 0; i < n1; i++)
+    {
+        leftSubset.push_back(lyrics.at(left + i));
+    }
+    for(int j = 0; j < n2; j++)
+    {
+        rightSubset.push_back(lyrics.at(mid + 1 + j));
+    }
+
+    int i, j, k;
+    i = 0;
+    j = 0;
+    k = left;
+
+    while(i < n1 && j < n2)
+    {
+        if(leftSubset.at(i) <= rightSubset.at(j))
+        {
+            lyrics.at(k) = leftSubset.at(i);
+            i++;
+        }
+        else
+        {
+            lyrics.at(k) = rightSubset.at(j);
+            j++;
+        }
+
+        k++;
+    }
+
+    while(i < n1)
+    {
+        lyrics.at(k) = leftSubset.at(i);
+        i++;
+        k++;
+    }
+    while(j < n2)
+    {
+        lyrics.at(k) = rightSubset.at(j);
+        j++;
+        k++;
+    }
+
+}
+
+void MergeSort(std::vector<Lyric> &lyrics, int left, int right)
+{
+    if(left < right)
+    {
+        int mid = left + (right - left) / 2;
+        MergeSort(lyrics, left, mid);
+        MergeSort(lyrics, mid + 1, right);
+
+        Merge(lyrics, left, mid, right);
+    }
+}
+
+
+
+
+
+
+
+
 std::string ConvertSearchToPhonetic(std::string userSearch, std::unordered_map<std::string, std::string> &ipa_map, std::unordered_map<std::string,std::string> &pronunciationMap)
 {
     std::string lowercaseUserSearch;
@@ -87,41 +194,12 @@ void CalcFuzzRatio(std::vector<Lyric> &allLyrics, std::string userSearchPhonetic
 
     std::cout << "Fuzz Ratio Calculated " << std::endl;
 
-    //std::sort(allLyrics.begin(), allLyrics.end(), std::greater<Lyric>());
+    std::sort(allLyrics.begin(), allLyrics.end(), std::less<Lyric>());
     // TODO: Call our sorts here
+    //QuickSort(allLyrics, 0, allLyrics.size() - 1);
+    //MergeSort(allLyrics, 0, allLyrics.size() - 1);
 }
 
-int Partition(std::vector<Lyric>& lyrics, int low, int high) {
-    Lyric pivot = lyrics.at(low);
-    int up = low, down = high;
 
-    while (up < down) {
-        for (int i = up; i < high; i++) {
-            if (lyrics.at(up) > pivot)
-                break;
-            up++;
-        }
-        for (int i = high; i > low; i--) {
-            if (lyrics.at(down) < pivot)
-                break;
-            down--;
-        }
-        if (up < down) {
-            Lyric temp = lyrics.at(up);
-            lyrics.at(up) = lyrics.at(down);
-            lyrics.at(down) = temp;
-        }
-    }
-    Lyric temp = lyrics.at(low);
-    lyrics.at(low) = lyrics.at(down);
-    lyrics.at(down) = temp;
-    return down;
-}
 
-void QuickSort(std::vector<Lyric>& lyrics, int low, int high) {
-    if (low < high) {
-        int pivot = Partition(lyrics, low, high);
-        QuickSort(lyrics, low, pivot - 1);
-        QuickSort(lyrics, pivot + 1, high);
-    }
-}
+
