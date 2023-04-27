@@ -91,4 +91,37 @@ void CalcFuzzRatio(std::vector<Lyric> &allLyrics, std::string userSearchPhonetic
     // TODO: Call our sorts here
 }
 
-// TODO: Sort Functions here maybe?
+int Partition(std::vector<Lyric>& lyrics, int low, int high) {
+    Lyric pivot = lyrics.at(low);
+    int up = low, down = high;
+
+    while (up < down) {
+        for (int i = up; i < high; i++) {
+            if (lyrics.at(up) > pivot)
+                break;
+            up++;
+        }
+        for (int i = high; i > low; i--) {
+            if (lyrics.at(down) < pivot)
+                break;
+            down--;
+        }
+        if (up < down) {
+            Lyric temp = lyrics.at(up);
+            lyrics.at(up) = lyrics.at(down);
+            lyrics.at(down) = temp;
+        }
+    }
+    Lyric temp = lyrics.at(low);
+    lyrics.at(low) = lyrics.at(down);
+    lyrics.at(down) = temp;
+    return down;
+}
+
+void QuickSort(std::vector<Lyric>& lyrics, int low, int high) {
+    if (low < high) {
+        int pivot = Partition(lyrics, low, high);
+        QuickSort(lyrics, low, pivot - 1);
+        QuickSort(lyrics, pivot + 1, high);
+    }
+}
