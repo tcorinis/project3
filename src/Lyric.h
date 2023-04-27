@@ -3,8 +3,8 @@
 #include <iostream>
 #include <rapidfuzz/fuzz.hpp>
 
-struct Lyric {
-
+class Lyric {
+public:
     std::string artistName;
     std::string songTitle;
     std::string phoneticLyric;

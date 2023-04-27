@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <vector>
 #include <rapidfuzz/fuzz.hpp>
 #include "LyricMatcher.h"
 
