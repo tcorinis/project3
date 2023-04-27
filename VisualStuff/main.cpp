@@ -2,9 +2,11 @@
 #include <fstream>
 #include <sfml/Graphics.hpp>
 #include <unordered_map>
-#include "SearchBar.h"
+#include <utility>
 #include "ImGui/imgui.h"
 #include "ImGui-SFML/imgui-SFML.h"
+#include "ImGui/imgui_internal.h"
+
 using std::string;
 
 // Stuff with IPA; commenting this out for now.
@@ -113,20 +115,42 @@ int distance(string first, string second) {
     return 0;
 }*/
 
-bool search(char lyrics[]) {
-    // Placeholder
-    std::cout << "Beantastic!\n";
+struct SongResult {
+    //Icon icon;
+    string name;
+    string artist;
+    std::vector<string> lyricsExcerpt;
+    int matchingLineIndex = 1;
+    SongResult() = default;
+    SongResult(string name, string artist, std::vector<string> lyricsExcerpt, int matchingLineIndex = 1) : name(std::move(name)), artist(std::move(artist)), lyricsExcerpt(std::move(lyricsExcerpt)), matchingLineIndex(matchingLineIndex) {}
+};
 
-    return false;
+std::vector<SongResult> search(const char lyrics[]) {
+    if(lyrics[0] == '\0') return {};
+
+    std::vector<SongResult> results;
+    for(int i = 0; i < 10; i++) {
+        SongResult song("Blank Space", "Taylor Swift", {"Isn't it weird", "All of these", "Are the same", "More or less?"});
+        results.push_back(song);
+    }
+    return results;
 }
 
 int main() {
     const int WINDOW_WIDTH = 500;
     const int WINDOW_HEIGHT = 700;
 
-    const int SEARCHBAR_HEIGHT = 80;
-
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Song Searcher");
+    const int ICON_WIDTH = 128;
+    const int ICON_HEIGHT = 128;
+
+    auto image = sf::Image{};
+    if (!image.loadFromFile("assets/songfinder_icon.png"))
+    {
+        std::cout << "Didn't find icon... Oh well!\n";
+    }
+    window.setIcon(ICON_WIDTH, ICON_HEIGHT, image.getPixelsPtr());
+
     window.setFramerateLimit(30); // Setting higher to 30 makes the refresh rate of the textbox go nutty. Can't backspace once without deleting everything.
 
     ImGui::SFML::Init(window);
@@ -139,11 +163,25 @@ int main() {
     bool &isOpen = justHereToMakeImGuiHappy; // (This is a joke. We should remove this before submission.)
 
     bool hasSearched = false; // False at the start; To stop "no results" from showing up before searching.
-    bool searchStatus = false; // Captures whether our search succeeded.
+    std::vector<SongResult> results; // Search results
 
-    while(window.isOpen()) { // Main loop
+    // Load fonts
+    auto &io = ImGui::GetIO();
+
+    io.Fonts->AddFontFromFileTTF("assets/arial.ttf", 24);
+    io.Fonts->AddFontFromFileTTF("assets/arialbd.ttf", 24);
+    io.Fonts->AddFontFromFileTTF("assets/framd.ttf", 30);
+    io.Fonts->AddFontFromFileTTF("assets/FRAHV.ttf", 30);
+
+    enum Fonts {ARIAL = 1, ARIAL_BOLD = 2, FRANK = 3, FRANK_BOLD = 4};
+
+    ImGui::SFML::UpdateFontTexture();
+
+    // Main loop
+    while(window.isOpen()) {
+        // Process events; we only really use ImGui events.
         sf::Event event;
-        while (window.pollEvent(event)) { // Capture SFML events
+        while (window.pollEvent(event)) {
             ImGui::SFML::ProcessEvent(window, event);
             if(event.type == sf::Event::Closed) {
                 window.close();
@@ -152,36 +190,121 @@ int main() {
 
         window.resetGLStates(); // Allegedly, we need this if we don't draw using SFML.
 
-        window.clear(sf::Color::Black);
+        window.clear(sf::Color::Black); // Clear screen for refresh
 
-        ImGui::SFML::Update(window, deltaTime); // Re: No idea what this does?
+        ImGui::SFML::Update(window, deltaTime); // Re: Not sure what this does?
+
+        // Disable CTRL+Tab shortcuts (global); these two lines via "ocornut" (https://github.com/ocornut/imgui/issues/5641)
+        ImGui::SetShortcutRouting(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiKeyOwner_None);
+        ImGui::SetShortcutRouting(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Tab, ImGuiKeyOwner_None);
+
+        const float BUTTON_WIDTH = 80;
+        const float SEARCH_XPADDING = 10;
 
         // Searchbar
-        ImGui::SetNextWindowSize({WINDOW_WIDTH, SEARCHBAR_HEIGHT});
-        ImGui::Begin("Help", &isOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-        ImGui::PushItemWidth(-1); // I think(?) this sets the width to max for the searchbar.
+        ImGui::SetNextWindowSize({WINDOW_WIDTH, WINDOW_HEIGHT});
+        ImGui::Begin("Help", &isOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNavFocus);
+        ImGui::PushItemWidth(ImGui::GetWindowWidth() - 2*SEARCH_XPADDING - BUTTON_WIDTH); // I think(?) this sets the width to max for the searchbar.
+
+        float search_yPos = ImGui::GetCursorPosY();
+
+        // Input textbox
         // The "##" prevents the text "SearchBar" from appearing in front of the searchbar.
+        ImGui::PushFont(io.Fonts->Fonts[ARIAL]);
         if (ImGui::InputTextWithHint("##SearchBar", inputHint, inputLyrics, IM_ARRAYSIZE(inputLyrics), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            searchStatus = search(inputLyrics);
+            results = search(inputLyrics);
             hasSearched = true;
         }
         ImGui::PopItemWidth();
 
         //Search button
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth()-BUTTON_WIDTH - SEARCH_XPADDING);
+        ImGui::SetCursorPosY(search_yPos);
+        ImGui::PushItemWidth(BUTTON_WIDTH);
         if(ImGui::Button("Search")) {
-            search(inputLyrics);
+            results = search(inputLyrics);
             hasSearched = true;
         }
-        ImGui::End();
-
+        ImGui::PopItemWidth();
+        ImGui::PopFont();
 
         // Results panel
-        ImGui::SetNextWindowSize({WINDOW_WIDTH, WINDOW_HEIGHT - SEARCHBAR_HEIGHT}); // Fill rest of space
-        ImGui::SetNextWindowPos({0, SEARCHBAR_HEIGHT}); // Start where the other panel ended
-        ImGui::Begin("##ResultsWindow", &hasSearched, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-        if(hasSearched && searchStatus == false) { // Writing "== false" explicitly bc i named searchStatus badly
-            ImGui::Text("Sorry, no results found!");
+        ImGui::BeginChild("##ResultsPanel");
+        if(hasSearched) {
+            const float RESULTS_YPADDING = 15;
+            if (results.empty()) {
+                // No results, just draw error text.
+                ImGui::PushFont(io.Fonts->Fonts[ARIAL]);
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + RESULTS_YPADDING);
+                string errorText = "Sorry, no results found!";
+                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(errorText.c_str()).x)*0.5f);
+                ImGui::Text(errorText.c_str());
+                ImGui::PopFont();
+            } else {
+                // Draw song result boxes
+                ImGui::SetCursorPosY(RESULTS_YPADDING); // Initial padding, so the first song box matches the others
+                for(auto &song : results) {
+                    // Song title and "by Artist"
+                    float titleY = ImGui::GetCursorPosY();
+
+                    // Need to calculate how to center
+                    ImGui::PushFont(io.Fonts->Fonts[FRANK_BOLD]);
+                    auto songName = song.name.c_str();
+                    float nameWidth = ImGui::CalcTextSize(songName).x;
+
+                    ImGui::PushFont(io.Fonts->Fonts[FRANK]);
+                    string byArtistText = " by " + song.artist;
+                    float byArtistWidth = ImGui::CalcTextSize(byArtistText.c_str()).x;
+
+                    // Drawing byArtist first because of the stack structure.
+                    ImGui::SetCursorPosX((WINDOW_WIDTH - nameWidth - byArtistWidth)*0.5f + nameWidth);
+                    ImGui::Text(byArtistText.c_str());
+                    ImGui::PopFont();
+
+                    // Draw song title.
+                    ImGui::SetCursorPosX((WINDOW_WIDTH - nameWidth - byArtistWidth)*0.5f);
+                    ImGui::SetCursorPosY(titleY); // Restore this because drawing moved it
+                    ImGui::Text(songName);
+                    ImGui::PopFont();
+
+                    // Add padding before lyrics
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + RESULTS_YPADDING);
+
+                    // Lyrics
+                    auto &excerpt = song.lyricsExcerpt;
+                    for(int i = 0; i < excerpt.size(); i++) {
+                        // Bold the matching line
+                        ImGui::PushFont(i == song.matchingLineIndex ? io.Fonts->Fonts[ARIAL_BOLD] : io.Fonts->Fonts[ARIAL]);
+
+                        // Centering
+                        auto xPos = (WINDOW_WIDTH - ImGui::CalcTextSize(excerpt[i].c_str()).x)*0.5;
+
+                        // Appending ellipses
+                        string line;
+                        if(i == 0) {
+                            line = "...";
+                            xPos -= ImGui::CalcTextSize("...").x; // Center without ellipsis
+                        }
+                        line += excerpt[i];
+                        if(i == excerpt.size()-1) line += "...";
+
+                        // Put on screen
+                        ImGui::SetCursorPosX(xPos);
+                        ImGui::Text(line.c_str());
+                        ImGui::PopFont();
+                    }
+
+                    // Add closing line and padding
+                    float yPos = ImGui::GetCursorPosY();
+                    yPos += RESULTS_YPADDING; // Padding
+                    ImGui::SetCursorPosY(yPos);
+                    ImGui::DrawLine({0, 0}, {WINDOW_WIDTH, 0}, ImGui::GetStyle().Colors[ImGuiCol_Border], 2);
+                    yPos += RESULTS_YPADDING; // More padding
+                    ImGui::SetCursorPosY(yPos);
+                }
+            }
         }
+        ImGui::EndChild();
         ImGui::End();
 
         // Render
