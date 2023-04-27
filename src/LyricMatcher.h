@@ -40,7 +40,7 @@ int Partition(std::vector<Lyric>& lyrics, int low, int high) {
 void QuickSort(std::vector<Lyric> &lyrics, int low, int high) {
     if (low < high) {
         int pivot = Partition(lyrics, low, high);
-        if (lyrics.at(pivot - 1).fuzzRatio >= FUZZ_THRESHOLD);
+        if (lyrics.at(pivot).fuzzRatio >= FUZZ_THRESHOLD);
             QuickSort(lyrics, low, pivot - 1);
         QuickSort(lyrics, pivot + 1, high);
     }
