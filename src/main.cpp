@@ -10,21 +10,25 @@
 #include <rapidfuzz/fuzz.hpp>
 #include "wordConverter.h"
 #include "Lyric.h"
+#include "LyricMatcher.h"
 
-bool cmp(const Lyric* left, const Lyric* right)
-{
-    return left->fuzzRatio > right->fuzzRatio;
-}
+// FOR POINTER COMPARISONS, CURRENTLY NOT USING
+// bool cmp(const Lyric* left, const Lyric* right)
+// {
+//     return left->fuzzRatio > right->fuzzRatio;
+// }
 
 int main()
 {
 	// READ IN DICTIONARY
 	std::unordered_map<std::string, std::string> ipa_map;
 	FillIpaMap(ipa_map);
-	std::cout << ipa_map.size() << std::endl;
-	std::string dictFilePath;
-	std::cout << "Enter dictionary file path: " << std::endl;
-	std::cin >> dictFilePath;
+
+	std::cout << ipa_map.size() << std::endl; // should be 16)
+	//std::string dictFilePath;
+	//std::cout << "Enter dictionary file path: " << std::endl; // for testing
+	//std::cin >> dictFilePath;
+
 	std::fstream stored_dict("programData/dictall.csv", std::ios::in);
     //std::fstream stored_dict(dictFilePath, std::ios::in);
     
@@ -45,22 +49,23 @@ int main()
 	}
 
     stored_dict.close();
-    std::cout << pronunciationMap.size() << std::endl;
+    std::cout << pronunciationMap.size() << std::endl; // should be 160,000 (unique words)
 
 	// READ IN DATA AND CREATE VECTOR OF UNIQUE LYRICS
 
-	std::string lyricsFilePath;
-	std::cout << "Enter file path of lyrics: " << std::endl;
-	std::cin >> lyricsFilePath;
+	// for testing
+	//std::string lyricsFilePath;
+	//std::cout << "Enter file path of lyrics: " << std::endl;
+	//std::cin >> lyricsFilePath;
 
 	//std::fstream inFile(lyricsFilePath, std::ios::in);
 	std::fstream inFile("programData/someconvertedlyrics.csv", std::ios::in);
 	
 	std::vector<Lyric> allLyrics;
 
-	std::regex validLyric = std::regex("^[a-zA-Z0-9\\s'\"\n]*$");
-    std::regex validWord = std::regex("^[a-zA-Z0-9']*\"?$");
-	std::regex numeric = std::regex("^[0-9]*$");
+	// std::regex validLyric = std::regex("^[a-zA-Z0-9\\s'\"\n]*$");
+    // std::regex validWord = std::regex("^[a-zA-Z0-9']*\"?$");
+	// std::regex numeric = std::regex("^[0-9]*$");
 
 	if(inFile.is_open())
 	{
@@ -95,13 +100,29 @@ int main()
 
 			}
 		}
+		std::cout << "Vector Size: " << allLyrics.size() << std::endl; // should be 1890406, unique lyrics 
 
-	// ACTUAL PROGRAM THAT READS USER INPUT AND DOES COMPUTE FUZZ ON EVERY SONG
-	inFile.close();
+		inFile.close();
 
 	}
-	std::cin.ignore(100,'\n');
-	std::cout << "Vector Size: " << allLyrics.size() << std::endl;
+	std::cin.ignore(100,'\n'); // clears the cin buffer
+
+	// TODO: Everything above this is one time only, run on program start up (loading in our dictionary, and ipa_map)
+
+	// TODO: Process: If the user clicks the search bar, take an input from standard input (cin) store as userSearch
+	// TODO: call CalcFuzzRatio(vector<Lyric> &allLyrics, string userSearch) which will eventually return the sorted vector
+	// TODO: CalcFuzzRatio(...) will use one of our implemented sorting algorithms based on user selection
+	// TODO: This main program will display <x> amount of the top results and maybe do some filtering
+
+	std::string userSearch;
+
+	std::string userSearchPhonetic;
+	
+	return 0;
+
+}
+
+/*
 	for(int i = 0; i < 15; i++)
 	{
 	
@@ -213,7 +234,4 @@ int main()
 		// }
 	
 	}
-
-	return 0;
-
-}
+	*/
