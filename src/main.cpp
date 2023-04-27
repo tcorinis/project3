@@ -6,9 +6,15 @@
 #include <regex>
 #include <unordered_map>
 #include <unordered_set>
+#include <algorithm>
 #include <rapidfuzz/fuzz.hpp>
 #include "wordConverter.h"
 #include "Lyric.h"
+
+bool cmp(const Lyric* left, const Lyric* right)
+{
+    return left->fuzzRatio > right->fuzzRatio;
+}
 
 int main()
 {
@@ -19,7 +25,8 @@ int main()
 	std::string dictFilePath;
 	std::cout << "Enter dictionary file path: " << std::endl;
 	std::cin >> dictFilePath;
-    std::fstream stored_dict(dictFilePath, std::ios::in);
+	std::fstream stored_dict("programData/dictall.csv", std::ios::in);
+    //std::fstream stored_dict(dictFilePath, std::ios::in);
     
     std::unordered_map<std::string,std::string> pronunciationMap;
     while(stored_dict.peek() != EOF)
@@ -39,12 +46,6 @@ int main()
 
     stored_dict.close();
     std::cout << pronunciationMap.size() << std::endl;
-    //double score = rapidfuzz::fuzz::ratio("gaht ay lahng with", "gaht ay lahng list uhv eks luh-vuhrs");
-    //std::cout << score << std::endl;
-
-	// create a vector of lyric objects that store artistName, songTitle, phoneticLyric and originalLyric
-	// after a user inputs a search
-	// iterate through the vector, call ComputeFuzzRatio which sets the fuzz ratio for all the lyrics
 
 	// READ IN DATA AND CREATE VECTOR OF UNIQUE LYRICS
 
@@ -52,9 +53,14 @@ int main()
 	std::cout << "Enter file path of lyrics: " << std::endl;
 	std::cin >> lyricsFilePath;
 
-	std::fstream inFile(lyricsFilePath, std::ios::in);
-	std::unordered_set<std::string> uniqueLyrics;
+	//std::fstream inFile(lyricsFilePath, std::ios::in);
+	std::fstream inFile("programData/someconvertedlyrics.csv", std::ios::in);
+	
 	std::vector<Lyric> allLyrics;
+
+	std::regex validLyric = std::regex("^[a-zA-Z0-9\\s'\"\n]*$");
+    std::regex validWord = std::regex("^[a-zA-Z0-9']*\"?$");
+	std::regex numeric = std::regex("^[0-9]*$");
 
 	if(inFile.is_open())
 	{
@@ -67,118 +73,147 @@ int main()
 			std::getline(inFile, songTitle, ',');
 			std::getline(inFile, junk, '"'); // opening quote
 			std::getline(inFile, songLyrics, '"');
-
 			//songLyrics.push_back('"'); // like a god"
 
 			std::stringstream songLyricsStream(songLyrics);
 			bool isLastLine = false;
-			
+			std::unordered_set<std::string> uniqueLyrics; // stores the unique lyric within the current song
+
 			while(std::getline(songLyricsStream, originalLyric)) // by new line character 
 			{
-				//std::cout << originalLyric << std::endl;
-				
 				std::getline(songLyricsStream, phoneticLyric);
-				//std::cout << phoneticLyric << std::endl;
-				// if(phoneticLyric.back() == '"')
-				// {
-				// 	phoneticLyric.pop_back();
-				// 	isLastLine = true; // might not NEED
-				// }
-				
-				if(uniqueLyrics.count(originalLyric) != 1) // if we haven't seen this lyric before
+
+
+				if(uniqueLyrics.count(originalLyric) != 1 && originalLyric.front() != '[' && originalLyric.back() != ']') // if we haven't seen this lyric before in the current song
 				{
 					// create a new Lyric object and push it back into the vector
-					
+					uniqueLyrics.insert(originalLyric);
+					//Lyric* lyric = new Lyric(artistName, songTitle, originalLyric, phoneticLyric);
 					Lyric lyric(artistName, songTitle, originalLyric, phoneticLyric);
 					allLyrics.push_back(lyric);
 				}
-				else
-				{
-					uniqueLyrics.insert(originalLyric); // set of all the unique lyrics, 
-				}
 
-				//if(isLastLine)
 			}
 		}
 
 	// ACTUAL PROGRAM THAT READS USER INPUT AND DOES COMPUTE FUZZ ON EVERY SONG
 	inFile.close();
+
 	}
-
+	std::cin.ignore(100,'\n');
 	std::cout << "Vector Size: " << allLyrics.size() << std::endl;
-
-	std::cout << "Enter search: \n";
-	std::string userSearch;
-	//std::cin.clear();
-	//std::cin.sync();
-	std::cin.ignore(1000, '\n');
-	std::getline(std::cin, userSearch);
-	//std::cout << userSearch << std::endl;
-
-	// convert the user search to phonetic pronunciation
-	std::regex validLyric = std::regex("^[a-zA-Z0-9\\s'\"\n\\[\\]]*$"); // lowercase a-z, nums, spaces, apostrpohes, quotes, square brackets
-    std::regex validWord = std::regex("^[a-zA-Z0-9']*\"?$");
-	std::regex numeric = std::regex("^[0-9]*$");
-
-	std::string userSearchPhonetic, word, ipaWord;
-	
-	std::stringstream userSearchStream(userSearch);
-
-	while(userSearchStream >> word) // for each word in the users search
+	for(int i = 0; i < 15; i++)
 	{
-		if(std::regex_match(word, numeric) && word.length() > 0 && word.length() < 19)
-		{
-			const char* numberString = word.c_str();
-			char* pEnd;
-			long long num = strtoll(numberString, &pEnd, 10);
-			std::string numName = numToName(num);
+	
 
-			std::stringstream numStream(numName);
-			std::string digitName;
-			while(numStream >> digitName)
+		std::cout << "Enter search: \n";
+		std::string userSearch;
+		//std::cin.clear();
+		//std::cin.sync();
+		std::getline(std::cin, userSearch);
+		
+		//std::cout << userSearch << std::endl;
+		std::string lowercaseUserSearch;
+		for(char c : userSearch)
+		{
+			lowercaseUserSearch.push_back(std::tolower(c));
+		}
+		userSearch = lowercaseUserSearch;
+
+		// convert the user search to phonetic pronunciation
+		//std::regex validLyric = std::regex("^[a-zA-Z0-9\\s'\"\n\\[\\]]*$"); // lowercase a-z, nums, spaces, apostrpohes, quotes, square brackets
+
+
+		std::string userSearchPhonetic, word, ipaWord;
+		
+		std::stringstream userSearchStream(userSearch);
+
+		while(userSearchStream >> word) // for each word in the users search
+		{
+			if(std::regex_match(word, numeric) && word.length() > 0 && word.length() < 19)
 			{
-				if(pronunciationMap.find(digitName) != pronunciationMap.end())
+				const char* numberString = word.c_str();
+				char* pEnd;
+				long long num = strtoll(numberString, &pEnd, 10);
+				std::string numName = numToName(num);
+
+				std::stringstream numStream(numName);
+				std::string digitName;
+				while(numStream >> digitName)
 				{
-					ipaWord = pronunciationMap[digitName];
+					if(pronunciationMap.find(digitName) != pronunciationMap.end())
+					{
+						ipaWord = pronunciationMap[digitName];
+					}
+					else
+					{
+						ipaWord = GetPronunciation(digitName);
+						ipaWord = DecodePronunciation(ipaWord, ipa_map);
+						pronunciationMap.emplace(digitName, ipaWord);
+					}
+					userSearchPhonetic.append(ipaWord);
+					userSearchPhonetic.push_back(' ');
+				}
+			}
+			else if(std::regex_match(word, validWord))
+			{
+				if(pronunciationMap.find(word) != pronunciationMap.end())
+				{
+					ipaWord = pronunciationMap[word];
 				}
 				else
 				{
-					ipaWord = GetPronunciation(digitName);
+					ipaWord = GetPronunciation(word);
 					ipaWord = DecodePronunciation(ipaWord, ipa_map);
-					pronunciationMap.emplace(digitName, ipaWord);
+					pronunciationMap.emplace(word, ipaWord);
 				}
 				userSearchPhonetic.append(ipaWord);
 				userSearchPhonetic.push_back(' ');
 			}
 		}
-		else if(std::regex_match(word, validWord))
+
+
+		// for(Lyric lyric : allLyrics)
+		// {
+		// 	//lyric.PartialFuzzRatio(userSearchPhonetic);
+		// 	//lyric.FuzzRatio(userSearchPhonetic);
+		// 	lyric.AllFuzzRatios(userSearchPhonetic);
+		// 	std::cout << lyric.originalLyric << std::endl;
+		// 	std::cout << lyric.phoneticLyric << std::endl;
+			
+		// 	// std::cout << "partial: " << lyric.fuzzPartialRatio << std::endl;
+		// 	// std::cout << "fuzzy normal: " << lyric.fuzzRatio << std::endl;
+		// 	// std::cout << "fuzzy token set: " << lyric.fuzzTokenSetRatio << std::endl;
+		// 	// std::cout << "fuzzy token sort: " << lyric.fuzzTokenSortRatio << std::endl;
+		// 	// std::cout << "fuzzy token: " << lyric.fuzzTokenRatio << std::endl;
+		// }
+		for(int i = 0; i < allLyrics.size(); i++)
 		{
-			if(pronunciationMap.find(word) != pronunciationMap.end())
-			{
-				ipaWord = pronunciationMap[word];
-			}
-			else
-			{
-				ipaWord = GetPronunciation(word);
-				ipaWord = DecodePronunciation(ipaWord, ipa_map);
-				pronunciationMap.emplace(word, ipaWord);
-			}
-			userSearchPhonetic.append(ipaWord);
-			userSearchPhonetic.push_back(' ');
+			allLyrics.at(i).FuzzRatio(userSearchPhonetic);
 		}
+
+		std::cout << "Fuzz Ratio Calculated " << std::endl;
+
+		std::sort(allLyrics.begin(), allLyrics.end(), std::greater<Lyric>());
+		std::cout << "User's Phonetic Search: "<< userSearchPhonetic << std::endl;
+		//std::cout << userSearchPhonetic << std::endl;
+		std::cout << "Top 10 Results: \n" << std::endl;
+
+		for(int i = 0; i < 10; i++)
+		{
+			std::cout << allLyrics.at(i).fuzzRatio << std::endl;
+			allLyrics.at(i).PrintLyrics();
+		}
+	
+
+		// int size = allLyrics.size();
+		// for(int i = 0; i < size; i++)
+		// {
+		// 	delete allLyrics.at(i);
+		// }
+	
 	}
 
+	return 0;
 
-	for(Lyric lyric : allLyrics)
-	{
-		lyric.PartialFuzzRatio(userSearchPhonetic);
-		
-		std::cout << lyric.originalLyric << std::endl;
-		std::cout << lyric.phoneticLyric << std::endl;
-		std::cout << lyric.fuzzPartialRatio << std::endl;
-	}
-
-	std::cout << userSearchPhonetic << std::endl;
-	//std::cout << userSearchPhonetic << std::endl;
-    return 0;
 }
