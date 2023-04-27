@@ -7,6 +7,7 @@
 #include "wordConverter.h"
 #include "Lyric.h"
 #include <rapidfuzz/fuzz.hpp>
+const float FUZZ_THRESHOLD = 50.0;
 
 int Partition(std::vector<Lyric>& lyrics, int low, int high) {
     Lyric pivot = lyrics.at(low);
@@ -15,12 +16,12 @@ int Partition(std::vector<Lyric>& lyrics, int low, int high) {
 
     while (up < down) {
         for (int i = up; i < high; i++) {
-            if (lyrics.at(up) < pivot)
+            if (lyrics.at(up) > pivot)
                 break;
             up++;
         }
         for (int i = high; i > low; i--) {
-            if (lyrics.at(down) > pivot)
+            if (lyrics.at(down) < pivot)
                 break;
             down--;
         }
@@ -39,7 +40,8 @@ int Partition(std::vector<Lyric>& lyrics, int low, int high) {
 void QuickSort(std::vector<Lyric> &lyrics, int low, int high) {
     if (low < high) {
         int pivot = Partition(lyrics, low, high);
-        QuickSort(lyrics, low, pivot - 1);
+        if (lyrics.at(pivot - 1).fuzzRatio >= FUZZ_THRESHOLD);
+            QuickSort(lyrics, low, pivot - 1);
         QuickSort(lyrics, pivot + 1, high);
     }
 }
