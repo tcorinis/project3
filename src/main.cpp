@@ -89,7 +89,7 @@ int main()
 				std::getline(songLyricsStream, phoneticLyric);
 
 
-				if(uniqueLyrics.count(originalLyric) != 1 && originalLyric.front() != '[' && originalLyric.back() != ']') // if we haven't seen this lyric before in the current song
+				if(uniqueLyrics.count(originalLyric) != 1 && !originalLyric.empty() && originalLyric.front() != '[' && originalLyric.back() != ']') // if we haven't seen this lyric before in the current song
 				{
 					// create a new Lyric object and push it back into the vector
 					uniqueLyrics.insert(originalLyric);
