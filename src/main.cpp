@@ -8,8 +8,6 @@
 #include <unordered_set>
 #include <algorithm>
 #include <rapidfuzz/fuzz.hpp>
-#include "wordConverter.h"
-#include "Lyric.h"
 #include "LyricMatcher.h"
 
 // FOR POINTER COMPARISONS, CURRENTLY NOT USING
