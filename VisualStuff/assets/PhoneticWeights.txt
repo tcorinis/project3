@@ -1,0 +1,217 @@
+uh:
+1 ah
+1 ouh
+2 oh
+2 w
+3 oo
+3 or
+3 e
+3 r
+3 i
+3 y
+4 m
+4 n
+4 h
+4 v
+4 l
+
+a:
+1 e
+1 i
+2 ah
+3 ee
+
+ay:
+1 e
+2 ee
+2 iy
+2 oy
+3 i
+3 ouh
+4 ah
+
+ah:
+1 i
+1 ouh
+2 e
+2 oh
+2 or
+3 h
+3 oo
+3 w
+4 l
+
+b:
+1 p
+1 f
+1 m
+1 v
+2 n
+2 d
+3 ng
+
+ch:
+1 sh
+1 s
+1 j
+2 th
+3 d
+3 k
+4 z
+
+d:
+1 t
+2 th
+3 g
+3 k
+
+e:
+1 i
+2 y
+2 ah
+2 ouh
+2 iy
+3 oo
+3 h
+4 l
+
+ee:
+1 i
+2 iy
+2 oy
+4 y
+
+f:
+1 p
+1 v
+2 h
+2 s
+2 th
+3 sh
+
+g:
+1 k
+2 ng
+3 sh
+3 j
+5 t
+
+h:
+1 w
+1 y
+2 i
+2 ouh
+3 th
+4 p
+4 s
+
+i:
+1 y
+2 oy
+3 or
+3 w
+4 oo
+
+iy:
+1 y
+2 oy
+4 ouh
+
+j:
+1 sh
+2 th
+2 z
+4 v
+
+k:
+3 p
+3 t
+
+l:
+1 r
+2 n
+2 oh
+3 or
+
+m:
+1 n
+1 ng
+2 ouh
+3 oh
+3 or
+4 p
+4 th
+
+n:
+1 ng
+3 y
+4 w
+
+ng:
+4 th
+
+oh:
+1 ouh
+2 or
+2 oo
+3 oy
+3 w
+4 r
+
+oy:
+3 y
+3 or
+3 ouh
+4 oo
+
+or:
+1 r
+2 ouh
+4 oo
+
+p:
+2 v
+3 t
+4 r
+4 sh
+
+r:
+3 w
+3 y
+4 th
+
+s:
+1 sh
+1 z
+2 th
+
+sh:
+2 th
+2 z
+4 v
+
+t:
+1 th
+
+th:
+
+oo:
+1 ouh
+3 w
+3 y
+
+ouh:
+1 w
+3 y
+
+v:
+3 w
+5 y
+
+w:
+1 y
+
+y:
+
+z:
+?
