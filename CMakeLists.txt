@@ -3,7 +3,8 @@ project(Project3)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(SFML_DIR "/Users/alexshim-huang/Desktop/SFML-2.5.1-macos-clang/include/SFML")
+# replace <SFML library path> with path of SFML
+set(SFML_DIR "<insert SFML library path>")
 find_package(SFML 2.5 COMPONENTS graphics audio REQUIRED)
 
 add_subdirectory(3rdparty/RapidFuzz)
