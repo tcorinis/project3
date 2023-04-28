@@ -1,10 +1,7 @@
-CMakeLists.txt:
-
+// Download the two files and put in src/data
 Data Files:
   https://drive.google.com/file/d/1PD9DE47JyiWsm89CshleJEYIsY0pkzcO/view?usp=sharing
   https://drive.google.com/file/d/1yjHw-Fo3x9hSKsR6hx2pGLQoCFgBC_1n/view?usp=sharing
-
-// Download the two files and put in src/data
 
 SFML:
   Requires SFML, in CMakeLists.txt make sure to set file path to where SFML is installed on local machine
