@@ -16,6 +16,4 @@ RapidFuzz:
   Multiple ways to install check git repository linked above!
   Change CMakeLists.txt accordingly, instructions are in the rapidfuzz-cpp desc.
   
-
-
-
+// PhoneticWeights.txt is for other things :D
