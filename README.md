@@ -1,3 +1,8 @@
+The file path src/ is most recently updated 
+
+Download what is in src/ , install dependencies (see below), download data files (see below)
+Modify makefile, good to go!
+
 // Download the two files and put in src/data
 Data Files:
   https://drive.google.com/file/d/1PD9DE47JyiWsm89CshleJEYIsY0pkzcO/view?usp=sharing
